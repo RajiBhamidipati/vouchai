@@ -199,8 +199,8 @@ async def health_detailed() -> Dict[str, Any]:
     """Detailed health check"""
     return {
         "status": "operational",
-        "message": "VouchAI v1 - 4-Agent Research Platform (Streaming)",
-        "agents": ["Scout", "Adjudicator", "Synthesizer", "Professor"],
+        "message": "VouchAI v1 - 3-Agent Research Platform (Streaming)",
+        "agents": ["Scout", "Adjudicator", "Professor"],
         "features": {
             "web_search": "Tavily API",
             "llm": "Google Gemini 2.0 Flash",

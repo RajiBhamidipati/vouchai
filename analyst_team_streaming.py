@@ -115,38 +115,25 @@ def create_analyst_team() -> Team:
     # Agent 2: Adjudicator
     adjudicator = Agent(
         name="Adjudicator",
-        role="Fact vs Opinion Categorizer",
+        role="Fact vs Opinion Categorizer & Report Writer",
         model=model,
         instructions=[
-            "You are an expert at distinguishing facts from opinions.",
+            "You are an expert at distinguishing facts from opinions and creating clear research reports.",
             "Analyze the research data provided by the Scout.",
             "Create two clear tables: Facts and Opinions.",
             "For Facts: Include verifiable claims with sources and confidence level (High/Medium/Low).",
             "For Opinions: Include subjective claims with sources and perspective type.",
             "Identify any conflicting data or contradictory claims.",
+            "Write a concise executive summary (2-3 paragraphs).",
+            "Include a comprehensive citations list with all sources.",
+            "Make the report easy to scan with clear headers and bullet points.",
+            "Maintain objectivity and acknowledge limitations.",
             "Be rigorous and objective in your categorization."
         ],
         markdown=True
     )
 
-    # Agent 3: Synthesizer
-    synthesizer = Agent(
-        name="Synthesizer",
-        role="Report Writer",
-        model=model,
-        instructions=[
-            "You are a skilled research synthesizer who creates clear, scannable reports.",
-            "Write a concise executive summary (2-3 paragraphs).",
-            "Present the facts and opinions tables in a clear format.",
-            "Highlight any conflicting data or uncertainties.",
-            "Include a comprehensive citations list with all sources.",
-            "Make the report easy to scan with clear headers and bullet points.",
-            "Maintain objectivity and acknowledge limitations."
-        ],
-        markdown=True
-    )
-
-    # Agent 4: Professor
+    # Agent 3: Professor
     professor = Agent(
         name="Professor",
         role="Quality Auditor",
@@ -169,15 +156,14 @@ def create_analyst_team() -> Team:
 
     # Create the team
     team = Team(
-        members=[scout, adjudicator, synthesizer, professor],
+        members=[scout, adjudicator, professor],
         name="Universal Research Analyst Team",
         model=model,
         instructions=[
             "Coordinate a comprehensive research analysis workflow:",
             "1. Scout: Search for primary sources on the research query",
-            "2. Adjudicator: Categorize findings into facts and opinions",
-            "3. Synthesizer: Create a scannable, structured report",
-            "4. Professor: Audit the report and provide quality evaluation",
+            "2. Adjudicator: Categorize findings into facts and opinions, create structured report with summary and citations",
+            "3. Professor: Audit the report and provide quality evaluation",
             "Return a structured JSON output with all required fields.",
             "Ensure thorough analysis and high-quality output."
         ],
@@ -230,7 +216,7 @@ async def run_research_streaming(query: str) -> AsyncGenerator[Dict[str, Any], N
     yield {
         "status": "agent_started",
         "agent": "Adjudicator",
-        "message": "⚖️ Categorizing facts vs opinions...",
+        "message": "⚖️ Categorizing facts vs opinions and creating report...",
         "progress": 40
     }
 
@@ -239,28 +225,11 @@ async def run_research_streaming(query: str) -> AsyncGenerator[Dict[str, Any], N
     yield {
         "status": "agent_completed",
         "agent": "Adjudicator",
-        "message": "✅ Claims categorized",
-        "progress": 60
+        "message": "✅ Report structured with facts and opinions",
+        "progress": 70
     }
 
-    # Agent 3: Synthesizer
-    yield {
-        "status": "agent_started",
-        "agent": "Synthesizer",
-        "message": "📝 Creating structured report...",
-        "progress": 65
-    }
-
-    await asyncio.sleep(0.1)
-
-    yield {
-        "status": "agent_completed",
-        "agent": "Synthesizer",
-        "message": "✅ Report generated",
-        "progress": 85
-    }
-
-    # Agent 4: Professor
+    # Agent 3: Professor
     yield {
         "status": "agent_started",
         "agent": "Professor",
