@@ -1,18 +1,18 @@
 """
-VouchAI v1 - Streaming Multi-Agent Research
-Provides real-time progress updates as each agent completes
+VouchAI v1 - Multi-Agent Research Platform
+Analyst Team: 4 specialized agents using Agno framework
+Domain: vouchai.app
 """
 import os
-from typing import List, AsyncGenerator, Dict, Any
+from typing import List
 from pydantic import BaseModel, Field
 from agno.agent import Agent
 from agno.team import Team
 from agno.models.google import Gemini
 from tavily import TavilyClient
-import asyncio
 
 
-# Pydantic schemas (same as original)
+# Pydantic schema for structured output
 class FactItem(BaseModel):
     claim: str
     sources: List[str]
@@ -81,6 +81,7 @@ def tavily_search(query: str) -> str:
             max_results=5
         )
 
+        # Format results
         results = []
         for result in response.get('results', []):
             results.append(f"Title: {result.get('title', 'N/A')}\n"
@@ -96,7 +97,7 @@ def create_analyst_team() -> Team:
     """Create and return the analyst team with all 4 agents"""
     model = get_gemini_model()
 
-    # Agent 1: Scout
+    # Agent 1: Scout - Primary source gatherer using Tavily
     scout = Agent(
         name="Scout",
         role="Primary Source Gatherer",
@@ -112,7 +113,7 @@ def create_analyst_team() -> Team:
         markdown=True
     )
 
-    # Agent 2: Adjudicator
+    # Agent 2: Adjudicator - Categorizes claims into Fact vs Opinion
     adjudicator = Agent(
         name="Adjudicator",
         role="Fact vs Opinion Categorizer",
@@ -129,7 +130,7 @@ def create_analyst_team() -> Team:
         markdown=True
     )
 
-    # Agent 3: Synthesizer
+    # Agent 3: Synthesizer - Creates scannable report
     synthesizer = Agent(
         name="Synthesizer",
         role="Report Writer",
@@ -146,7 +147,7 @@ def create_analyst_team() -> Team:
         markdown=True
     )
 
-    # Agent 4: Professor
+    # Agent 4: Professor - Auditor and quality evaluator
     professor = Agent(
         name="Professor",
         role="Quality Auditor",
@@ -167,7 +168,7 @@ def create_analyst_team() -> Team:
         markdown=True
     )
 
-    # Create the team
+    # Create the analyst team
     team = Team(
         members=[scout, adjudicator, synthesizer, professor],
         name="Universal Research Analyst Team",
@@ -187,134 +188,64 @@ def create_analyst_team() -> Team:
     return team
 
 
-async def run_research_streaming(query: str) -> AsyncGenerator[Dict[str, Any], None]:
+async def run_research(query: str) -> ResearchOutput:
     """
-    Execute research workflow with streaming progress updates
+    Execute the research workflow with all 4 agents
 
-    Yields progress events for each agent as they complete:
-    - {status: 'agent_started', agent: 'Scout', message: '...'}
-    - {status: 'agent_completed', agent: 'Scout', message: '...'}
-    - {status: 'completed', data: ResearchOutput}
+    Args:
+        query: The research question or topic
+
+    Returns:
+        ResearchOutput: Structured research results with evaluation
     """
-
-    # Agent 1: Scout
-    yield {
-        "status": "agent_started",
-        "agent": "Scout",
-        "message": "🔍 Searching for primary sources...",
-        "progress": 25
-    }
-
+    # Create the analyst team
     team = create_analyst_team()
 
-    # Run the team (this is still blocking, but we simulate streaming)
-    # In a production version, you'd want to actually stream each agent's output
-    yield {
-        "status": "agent_in_progress",
-        "agent": "Scout",
-        "message": "🔍 Analyzing search results...",
-        "progress": 30
-    }
-
-    # Simulate async to allow yielding
-    await asyncio.sleep(0.1)
-
-    yield {
-        "status": "agent_completed",
-        "agent": "Scout",
-        "message": "✅ Sources gathered",
-        "progress": 35
-    }
-
-    # Agent 2: Adjudicator
-    yield {
-        "status": "agent_started",
-        "agent": "Adjudicator",
-        "message": "⚖️ Categorizing facts vs opinions...",
-        "progress": 40
-    }
-
-    await asyncio.sleep(0.1)
-
-    yield {
-        "status": "agent_completed",
-        "agent": "Adjudicator",
-        "message": "✅ Claims categorized",
-        "progress": 60
-    }
-
-    # Agent 3: Synthesizer
-    yield {
-        "status": "agent_started",
-        "agent": "Synthesizer",
-        "message": "📝 Creating structured report...",
-        "progress": 65
-    }
-
-    await asyncio.sleep(0.1)
-
-    yield {
-        "status": "agent_completed",
-        "agent": "Synthesizer",
-        "message": "✅ Report generated",
-        "progress": 85
-    }
-
-    # Agent 4: Professor
-    yield {
-        "status": "agent_started",
-        "agent": "Professor",
-        "message": "🎓 Auditing quality and checking for hallucinations...",
-        "progress": 90
-    }
-
-    # Run the actual research (blocking call)
+    # Run the analyst team with structured output schema
     result = team.run(
         query,
         stream=False,
         output_schema=ResearchOutput
     )
 
-    await asyncio.sleep(0.1)
-
-    yield {
-        "status": "agent_completed",
-        "agent": "Professor",
-        "message": "✅ Quality audit complete",
-        "progress": 95
-    }
-
-    # Extract the structured output
+    # If the result has the structured output, return it
     if hasattr(result, 'output') and result.output:
-        output = result.output
-    else:
-        # Fallback if structured output not available
-        content = result.content if hasattr(result, 'content') else str(result)
-        output = ResearchOutput(
-            summary=f"Research on: {query}\n\n{content}",
-            facts_table=[
-                FactItem(
-                    claim="Research analysis complete",
-                    sources=["Team output"],
-                    confidence="Medium"
-                )
-            ],
-            opinions_table=[],
-            conflicting_data=[],
-            citations_list=["https://placeholder.com"],
-            professor_eval_score=ProfessorEvaluation(
-                score=7,
-                feedback="Analysis complete",
-                hallucination_check="Review required",
-                recommendations=["Review outputs", "Validate sources", "Check claims"]
-            )
-        )
+        return result.output
 
-    # Final result
-    yield {
-        "status": "completed",
-        "agent": "system",
-        "message": "✅ Research complete!",
-        "progress": 100,
-        "data": output
-    }
+    # Otherwise, create a structured output from the team's response
+    # Get the content from the result
+    content = result.content if hasattr(result, 'content') else str(result)
+
+    # Create a basic structured output
+    # In production, you'd want to parse the actual agent responses
+    output = ResearchOutput(
+        summary=f"Research on: {query}\n\n{content}",
+        facts_table=[
+            FactItem(
+                claim="Placeholder - parsing agent responses",
+                sources=["Team output"],
+                confidence="Medium"
+            )
+        ],
+        opinions_table=[
+            OpinionItem(
+                claim="Placeholder - parsing agent responses",
+                sources=["Team output"],
+                perspective="Analysis pending"
+            )
+        ],
+        conflicting_data=[],
+        citations_list=["https://placeholder.com"],
+        professor_eval_score=ProfessorEvaluation(
+            score=7,
+            feedback="Initial analysis complete",
+            hallucination_check="Requires manual review",
+            recommendations=[
+                "Review agent outputs",
+                "Parse structured data",
+                "Validate sources"
+            ]
+        )
+    )
+
+    return output
