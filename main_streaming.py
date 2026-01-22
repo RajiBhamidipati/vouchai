@@ -109,8 +109,14 @@ async def research_stream_endpoint(request: ResearchRequest):
 
             # Run research with streaming updates
             async for event in run_research_streaming(request.query):
+                # Convert Pydantic models to dict for JSON serialization
+                serializable_event = event.copy()
+                if 'data' in serializable_event and hasattr(serializable_event['data'], 'model_dump'):
+                    # Convert ResearchOutput Pydantic model to dict
+                    serializable_event['data'] = serializable_event['data'].model_dump()
+
                 # Send progress update
-                yield f"data: {json.dumps(event)}\n\n"
+                yield f"data: {json.dumps(serializable_event)}\n\n"
 
                 # If this is the final result
                 if event.get('status') == 'completed':
