@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: vouchai-api
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT --timeout-keep-alive 300
+    healthCheckPath: /
+    envVars:
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: TAVILY_API_KEY
+        sync: false
+      - key: PYTHON_VERSION
+        value: 3.11.0
