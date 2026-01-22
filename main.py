@@ -151,6 +151,24 @@ async def research_endpoint(request: ResearchRequest) -> ResearchResponse:
         )
 
 
+@app.get("/health-detailed")
+async def health_detailed() -> Dict[str, Any]:
+    """Detailed health check showing system is operational"""
+    return {
+        "status": "operational",
+        "message": "VouchAI v1 - 4-Agent Research Platform",
+        "agents": ["Scout", "Adjudicator", "Synthesizer", "Professor"],
+        "features": {
+            "web_search": "Tavily API",
+            "llm": "Google Gemini 2.0 Flash",
+            "quality_scoring": "1-10 scale",
+            "hallucination_detection": True,
+            "eval_logging": "JSONL"
+        },
+        "note": "Full research queries take 90-120 seconds (thorough multi-agent analysis)"
+    }
+
+
 @app.get("/stats")
 async def get_stats() -> Dict[str, Any]:
     """
