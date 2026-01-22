@@ -33,7 +33,7 @@ if not os.getenv("TAVILY_API_KEY"):
 app = FastAPI(
     title="VouchAI API v1 - Streaming",
     description="Production-ready multi-agent research platform with real-time streaming",
-    version="1.1.0"
+    version="1.2.0"
 )
 
 # Add CORS middleware
