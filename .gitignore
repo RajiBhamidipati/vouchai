@@ -1,0 +1,41 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+venv/
+env/
+
+# Environment variables (API keys)
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Logs and databases
+*.log
+*.jsonl
+*.db
+*.sqlite
+
+# Claude Code
+.claude/
+
+# Test coverage
+.coverage
+htmlcov/
+
+# Temporary files
+*.tmp
+.pytest_cache/
